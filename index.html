@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Robô IA V2 — Paper Trading</title>
+<style>
+:root{--bg:#07111b;--card:#0d1b28;--line:#1b3447;--text:#eef7ff;--muted:#91a7b8;--accent:#22e6a7;--danger:#ff5f67;--warn:#ffc857}
+*{box-sizing:border-box}body{margin:0;background:#07111b;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}.wrap{max-width:1100px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}.brand{font-size:22px;font-weight:800}.brand span{color:var(--accent)}.badge{padding:8px 12px;border:1px solid #24513f;border-radius:999px;color:var(--accent);background:#09231e;font-size:12px}.card{background:#0d1b28;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}.controls{display:flex;gap:8px;flex-wrap:wrap}.input{background:#081521;color:#fff;border:1px solid var(--line);border-radius:10px;padding:11px;flex:1;min-width:220px}.btn{border:0;border-radius:10px;padding:11px 15px;font-weight:750;cursor:pointer}.primary{background:var(--accent);color:#04120d}.secondary{background:#173044;color:#fff}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.metric{background:#091622;border:1px solid var(--line);border-radius:14px;padding:13px}.muted{color:var(--muted);font-size:12px}.big{font-size:22px;font-weight:800;margin-top:5px}.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{padding:11px 7px;border-bottom:1px solid var(--line);text-align:left}.pill{display:inline-block;padding:5px 8px;border-radius:999px;font-weight:750;font-size:11px}.buy{background:#0d4638;color:var(--accent)}.sell{background:#482026;color:#ff9096}.neutral{background:#253746;color:#d4e0e8}.note{color:var(--muted);font-size:12px;line-height:1.5}.error{color:#ff9096}@media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}.top{align-items:flex-start}.table{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><div class="brand">🤖 Robô <span>IA</span> V2</div><div class="badge">PAPER TRADING • SEM DINHEIRO REAL</div></div>
+<div class="card">
+  <b>Mercado real + simulação</b>
+  <p class="note">O painel consulta dados históricos de mercado e calcula sinais. As ordens são apenas virtuais nesta V2.</p>
+  <div class="controls">
+    <input id="tickers" class="input" value="PETR4.SA,VALE3.SA,ITUB4.SA,BOVA11.SA">
+    <button class="btn primary" onclick="loadMarket()">↻ Atualizar mercado</button>
+  </div>
+  <p id="status" class="note">Pronto para consultar.</p>
+</div>
+
+<div class="grid">
+ <div class="metric"><div class="muted">Capital virtual</div><div class="big">R$ 10.000</div></div>
+ <div class="metric"><div class="muted">Modo</div><div class="big" style="color:var(--accent)">PAPER</div></div>
+ <div class="metric"><div class="muted">Execução real</div><div class="big" style="color:var(--warn)">DESLIGADA</div></div>
+ <div class="metric"><div class="muted">Risco</div><div class="big">Controlado</div></div>
+</div>
+
+<div class="card" style="margin-top:12px">
+ <b>Sinais da IA</b>
+ <div style="overflow:auto;margin-top:10px">
+ <table class="table"><thead><tr><th>Ativo</th><th>Preço</th><th>Sinal</th><th>Confiança</th><th>RSI</th><th>Tendência</th><th>Vol.</th><th>Teste*</th></tr></thead>
+ <tbody id="rows"><tr><td colspan="8" class="note">Clique em “Atualizar mercado”.</td></tr></tbody></table>
+ </div>
+ <p class="note">* “Teste” é a acurácia simples do classificador em um período posterior ao treino; não é previsão de rentabilidade.</p>
+</div>
+
+<div class="card">
+ <b>Como a V2 funciona</b>
+ <p class="note">Dados → indicadores → modelo de classificação → sinal → regras de risco → ordem virtual. O sistema separa treino e teste temporalmente para reduzir vazamento de informação.</p>
+ <p class="note">Fonte de dados nesta versão: Yahoo Finance através do pacote yfinance. A documentação do yfinance descreve histórico e intervalos de mercado, inclusive intraday, com limitações de disponibilidade. citeturn0search0turn0search1</p>
+</div>
+</div>
+<script>
+async function loadMarket(){
+ const status=document.getElementById('status'), rows=document.getElementById('rows');
+ status.textContent='Consultando mercado…'; rows.innerHTML='<tr><td colspan="8">Carregando…</td></tr>';
+ try{
+  const q=encodeURIComponent(document.getElementById('tickers').value);
+  const r=await fetch('/api/market?tickers='+q); const d=await r.json();
+  rows.innerHTML=d.results.map(x=>{
+    const cls=x.signal==='COMPRA'?'buy':x.signal==='VENDA'?'sell':'neutral';
+    const trend=(x.trend>=0?'+':'')+x.trend+'%';
+    return `<tr><td><b>${x.ticker}</b></td><td>R$ ${x.price.toFixed(2)}</td><td><span class="pill ${cls}">${x.signal}</span></td><td>${x.confidence}%</td><td>${x.rsi}</td><td>${trend}</td><td>${x.volatility}%</td><td>${x.test_accuracy}%</td></tr>`;
+  }).join('');
+  const errs=d.errors?.length?(' Erros: '+d.errors.map(e=>e.ticker).join(', ')):''; 
+  status.textContent='Atualizado em '+new Date().toLocaleString('pt-BR')+'.'+errs;
+ }catch(e){status.innerHTML='<span class="error">Não foi possível consultar o servidor. Verifique se o backend está rodando.</span>'}
+}
+</script>
+</body></html>
