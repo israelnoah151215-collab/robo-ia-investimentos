@@ -57,9 +57,9 @@ def analyze(ticker):
     trend = float(latest["sma20"] / latest["sma60"] - 1)
 
     # Sinal demonstrativo: IA + filtro de tendência + RSI.
-    if p >= 0.58 and trend > 0 and latest["rsi"] < 72:
+        if p >= 0.70:
         signal = "COMPRA"
-    elif p <= 0.42 or trend < 0 or latest["rsi"] > 78:
+    elif p <= 0.30:
         signal = "VENDA"
     else:
         signal = "NEUTRO"
