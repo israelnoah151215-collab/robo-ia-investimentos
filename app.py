@@ -57,12 +57,11 @@ def analyze(ticker):
     trend = float(latest["sma20"] / latest["sma60"] - 1)
 
     # Sinal demonstrativo: IA + filtro de tendência + RSI.
-        if p >= 0.70:
-        signal = "COMPRA"
+    if p >= 0.70:
+    signal = "COMPRA"
     elif p <= 0.30:
-        signal = "VENDA"
-    else:
-        signal = "NEUTRO"
+    signal = "VENDA"
+    else:signal = "NEUTRO"
 
     # Métrica de teste simples, sem transformar isso em promessa de retorno.
     test_pred = (test["prob_up"] >= 0.5).astype(int)
